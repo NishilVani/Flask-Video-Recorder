@@ -43,8 +43,6 @@ function computeFrame() {
         ctx_tmp.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
         var imagebase64data = c_tmp.toDataURL("image/png");
         const file = DataURIToBlob(imagebase64data);
-        // imagebase64data = imagebase64data.replace("data:image/png;base64,", "");
-        // console.log(imagebase64data);
         data.append(
             "frame" + frame_num.toString(),
             file,
@@ -72,7 +70,6 @@ function updateTimer() {
             stop_button.click();
         } else {
             send.innerHTML = "Send Video: " + sec.toString() + "s";
-
             sec += 1;
         }
         setTimeout(updateTimer, 1000);
@@ -99,16 +96,12 @@ stop_button.addEventListener("click", function() {
 });
 
 send.addEventListener("click", function() {
-    // data = JSON.stringify(data);
     if (sec > 0) {
         data.append("Time", sec);
         var settings = {
             url: "http://127.0.0.1:5000/video",
             method: "POST",
             timeout: 0,
-            // headers: {
-            //     "Content-Type": "multipart/formdata",
-            // },
             processData: false,
             mimeType: "multipart/form-data",
             contentType: false,
