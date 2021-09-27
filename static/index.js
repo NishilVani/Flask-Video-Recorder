@@ -4,7 +4,6 @@ let send = document.getElementById("send");
 let stream = null;
 let video = document.getElementById("video");
 var data = new FormData();
-let media_recorder = null;
 let frame_num = 0;
 let sec = 0;
 let c_tmp, ctx_tmp;
@@ -41,23 +40,18 @@ function DataURIToBlob(dataURI) {
 
 function computeFrame() {
     if (rec) {
-        if (sec == 60) {
-            stop_button.click();
-        } else {
-            send.innerHTML = "Send Video: " + sec.toString() + "s";
-            sec += 1;
-
-            ctx_tmp.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-            var imagebase64data = c_tmp.toDataURL("image/png");
-            const file = DataURIToBlob(imagebase64data);
-            data.append(
-                "frame" + frame_num.toString(),
-                file,
-                "frame" + frame_num.toString() + ".png"
-            );
-            frame_num += 1;
-            setTimeout(computeFrame, 50);
-        }
+        ctx_tmp.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        var imagebase64data = c_tmp.toDataURL("image/png");
+        const file = DataURIToBlob(imagebase64data);
+        // imagebase64data = imagebase64data.replace("data:image/png;base64,", "");
+        // console.log(imagebase64data);
+        data.append(
+            "frame" + frame_num.toString(),
+            file,
+            "frame" + frame_num.toString() + ".png"
+        );
+        frame_num += 1;
+        setTimeout(computeFrame, 50);
     }
 }
 if (navigator.mediaDevices.getUserMedia) {
@@ -72,6 +66,19 @@ if (navigator.mediaDevices.getUserMedia) {
         });
 }
 
+function updateTimer() {
+    if (rec) {
+        if (sec == 60) {
+            stop_button.click();
+        } else {
+            send.innerHTML = "Send Video: " + sec.toString() + "s";
+
+            sec += 1;
+        }
+        setTimeout(updateTimer, 1000);
+    }
+}
+
 start_button.addEventListener("click", function() {
     start_button.disabled = true;
     stop_button.disabled = false;
@@ -80,26 +87,28 @@ start_button.addEventListener("click", function() {
     rec = true;
     sec = 0;
     computeFrame();
+    updateTimer();
 });
-
-
 
 stop_button.addEventListener("click", function() {
     start_button.disabled = false;
     stop_button.disabled = true;
     send.disabled = false;
-    frame_num = 0;
     rec = false;
-    media_recorder.stop();
+    frame_num = 0;
 });
 
 send.addEventListener("click", function() {
+    // data = JSON.stringify(data);
     if (sec > 0) {
         data.append("Time", sec);
         var settings = {
             url: "http://127.0.0.1:5000/video",
             method: "POST",
             timeout: 0,
+            // headers: {
+            //     "Content-Type": "multipart/formdata",
+            // },
             processData: false,
             mimeType: "multipart/form-data",
             contentType: false,
