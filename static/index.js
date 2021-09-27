@@ -41,18 +41,23 @@ function DataURIToBlob(dataURI) {
 
 function computeFrame() {
     if (rec) {
-        ctx_tmp.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        var imagebase64data = c_tmp.toDataURL("image/png");
-        const file = DataURIToBlob(imagebase64data);
-        // imagebase64data = imagebase64data.replace("data:image/png;base64,", "");
-        // console.log(imagebase64data);
-        data.append(
-            "frame" + frame_num.toString(),
-            file,
-            "frame" + frame_num.toString() + ".png"
-        );
-        setTimeout(computeFrame, 50);
-        frame_num += 1;
+        if (sec == 60) {
+            stop_button.click();
+        } else {
+            send.innerHTML = "Send Video: " + sec.toString() + "s";
+            sec += 1;
+
+            ctx_tmp.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+            var imagebase64data = c_tmp.toDataURL("image/png");
+            const file = DataURIToBlob(imagebase64data);
+            data.append(
+                "frame" + frame_num.toString(),
+                file,
+                "frame" + frame_num.toString() + ".png"
+            );
+            frame_num += 1;
+            setTimeout(computeFrame, 50);
+        }
     }
 }
 if (navigator.mediaDevices.getUserMedia) {
@@ -75,41 +80,26 @@ start_button.addEventListener("click", function() {
     rec = true;
     sec = 0;
     computeFrame();
-    media_recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-    media_recorder.addEventListener("dataavailable", function(e) {
-        if (sec == 60) {
-            stop_button.click();
-        } else {
-            send.innerHTML = "Send Video: " + sec.toString() + "s";
-
-            sec += 1;
-        }
-    });
-    media_recorder.addEventListener("stop", function() {
-        frame_num = 0;
-    });
-    media_recorder.start(1000);
 });
+
+
 
 stop_button.addEventListener("click", function() {
     start_button.disabled = false;
     stop_button.disabled = true;
     send.disabled = false;
+    frame_num = 0;
     rec = false;
     media_recorder.stop();
 });
 
 send.addEventListener("click", function() {
-    // data = JSON.stringify(data);
     if (sec > 0) {
         data.append("Time", sec);
         var settings = {
             url: "http://127.0.0.1:5000/video",
             method: "POST",
             timeout: 0,
-            // headers: {
-            //     "Content-Type": "multipart/formdata",
-            // },
             processData: false,
             mimeType: "multipart/form-data",
             contentType: false,
