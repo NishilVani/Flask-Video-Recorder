@@ -11,8 +11,6 @@ app.config["UPLOAD_VID"] = UPLOAD_VID
 
 CORS(app)
 
-file = open("text.txt",'w')
-
 @app.route('/', methods = ["GET", "POST"])
 def main():
     return  render_template("index.html")
